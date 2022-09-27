@@ -111,7 +111,7 @@ class Game extends Board {
       }
     }
 
-    // if there are not winners and there are not more available moves, it's a draw.
+    // If there are no moves and no winners, it's a draw.
     if (this.availableMoves.length === 0) {
       console.log('Draw!');
       this.endGame();
