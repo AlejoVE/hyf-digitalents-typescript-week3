@@ -1,11 +1,9 @@
+type Values = {
+  [key: string]: string
+}
+class Board {
 
-class Game {
-  availableMoves: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  movesDone: [number, string][] = [];
-  currentTurn: string = 'HUMAN';
-  currentState: any = {}
-
-  public render() {
+  public renderInitialBoard() {
     console.log('         TIC - TAC - TOE')
     console.log("Choose a cell numbered from 1 to 9 as below and play")
     console.log(`
@@ -14,68 +12,84 @@ class Game {
           4 | 5  | 6
         --------------
           7 | 8  | 9
+
+-------------- --------------  --------------  --------------
         `)
   }
+  public renderBoard(object: Values) {
+    console.log(`
+            ${object['1'] || ' '} | ${object['2'] || ' '} |  ${object['3'] || ' '}
+            -----------
+            ${object['4'] || ' '} | ${object['5'] || ' '} |  ${object['6'] || ' '}
+            -----------
+            ${object['7'] || ' '} | ${object['8'] || ' '} |  ${object['9'] || ' '}
 
+    `)
+
+  }
+}
+
+
+class Game extends Board {
+  availableMoves: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  currentTurn: string = 'COMPUTER';
+  currentState: Values = {}
 
   public command(command: string): void {
 
-    if (this.availableMoves.length === 0) {
-      this.checkGame()
-    }
+    const move: number = Number(command)
 
-    const move = Number(command)
+    // Check if the move is valid
     if (!this.availableMoves.includes(move)) {
       console.log('Invalid move')
       return
     }
 
-    this.movesDone.push([move, 'X'])
-    this.updateState(this.movesDone)
+    this.executeMove(move, 'X', 'COMPUTER')
 
-    console.log(`\n HUMAN has put a X in cell ${move}`)
-    this.renderBoard()
-    this.checkGame()
-
-    this.availableMoves = this.availableMoves.filter(value => value != move)
-    this.currentTurn = 'COMPUTER'
-
+    // Execute computer move after 1.5s
     setTimeout(() => {
-      this.machineMove()
-    }, 1000);
+      this.computerMove()
+    }, 1500);
   }
 
-  public machineMove(): void {
+  public computerMove(): void {
+    const randomIndex: number = Math.floor(Math.random() * this.availableMoves.length);
 
+    const move: number = this.availableMoves[randomIndex]
+
+    this.executeMove(move, 'O', 'HUMAN')
+  }
+
+  public executeMove(move: number, value: string, nextTurn: string) {
+    // If there are no available moves, check if there is a winner or draw.
     if (this.availableMoves.length === 0) {
       this.checkGame()
     }
 
+    // Take out current move from available moves
+    this.availableMoves = this.availableMoves.filter(value => value != move);
 
-    const randomIndex = Math.floor(Math.random() * this.availableMoves.length);
-    const move = this.availableMoves[randomIndex]
+    // Update state
+    this.currentState[move] = value;
 
-    this.movesDone.push([move, 'O'])
-    this.availableMoves = this.availableMoves.filter(value => value != move)
-    this.updateState(this.movesDone)
-    console.log(`COMPUTER has put a X in cell ${move}`)
+    console.log(`${this.currentTurn} has put a ${value} in cell ${move}`);
 
-    this.renderBoard()
-    this.checkGame()
-    this.currentTurn = 'HUMAN'
+    this.renderBoard(this.currentState);
+
+    // Check if there is a winner or draw.
+    this.checkGame();
+
+    // Update turn
+    this.currentTurn = nextTurn;
 
   }
 
-  public updateState(array: [number, string][]) {
-    const object = Object.fromEntries(array)
-    this.currentState = object
-  }
-
-  public checkGame() {
-    const winningRows = [
-      this.currentState['1'] + this.currentState['2'] + this.currentState['3'], //First line
-      this.currentState['4'] + this.currentState['5'] + this.currentState['6'], //second line
-      this.currentState['7'] + this.currentState['8'] + this.currentState['9'], //Third line
+  public checkGame(): void {
+    const winningRows: string[] = [
+      this.currentState['1'] + this.currentState['2'] + this.currentState['3'], //First row
+      this.currentState['4'] + this.currentState['5'] + this.currentState['6'], //second row
+      this.currentState['7'] + this.currentState['8'] + this.currentState['9'], //Third row
       this.currentState['1'] + this.currentState['4'] + this.currentState['7'], //First Colum
       this.currentState['2'] + this.currentState['5'] + this.currentState['8'], //Second Colum
       this.currentState['3'] + this.currentState['6'] + this.currentState['9'], //Third Colum
@@ -83,43 +97,23 @@ class Game {
       this.currentState['7'] + this.currentState['5'] + this.currentState['3'], //Second Diagonal
     ]
 
-    const match = ['XXX', 'OOO']
+    const match: string[] = ['XXX', 'OOO']
 
-    if (this.availableMoves.length === 0) {
-      for (let i = 0; i < winningRows.length; i++) {
-        if (winningRows[i] === match[0] || winningRows[i] === match[1]) {
-          console.log(`${this.currentTurn} has won!`)
-          this.endGame()
-        } else {
-          console.log('Draw!')
-          this.endGame()
-        }
-      }
-    }
-
-    for (let i = 0; i < winningRows.length; i++) {
-      if (winningRows[i] === match[0] || winningRows[i] === match[1]) {
+    for (let i = 0; i <= winningRows.length; i++) {
+      if (winningRows[i] === match[1] || winningRows[i] === match[0]) {
         console.log(`${this.currentTurn} has won!`)
         this.endGame()
       }
     }
 
+    if (this.availableMoves.length === 0) {
+      console.log('Draw!')
+      this.endGame()
+    }
 
   }
 
-  public renderBoard() {
-    console.log(`
-            ${this.currentState['1'] || ' '} | ${this.currentState['2'] || ' '} |  ${this.currentState['3'] || ' '}
-            -----------
-            ${this.currentState['4'] || ' '} | ${this.currentState['5'] || ' '} |  ${this.currentState['6'] || ' '}
-            -----------
-            ${this.currentState['7'] || ' '} | ${this.currentState['8'] || ' '} |  ${this.currentState['9'] || ' '}
-
-    `)
-
-  }
-
-  public endGame() {
+  public endGame(): void {
     process.exit(0)
   }
 

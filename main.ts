@@ -8,16 +8,18 @@ const rl = readline.createInterface({
     prompt: 'Please input a cell number: '
 });
 
-game.render();
-
-rl.prompt();
+game.renderInitialBoard();
+setTimeout(() => {
+    game.computerMove()
+}, 1000);
+setTimeout(() => {
+    rl.prompt();
+}, 2000);
 
 rl.on('line', (line: string) => {
     if (line.toLowerCase() === "exit") {
         process.exit(0);
     }
-
-    // game.renderBoard();
 
     game.command(line.trim());
 
