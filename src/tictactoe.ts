@@ -7,7 +7,7 @@ type ValidPlayer = "HUMAN" | "COMPUTER";
 class Player {
   player: ValidPlayer = 'COMPUTER';
 
-  get currentPlayer() {
+  get currentPlayer(): ValidPlayer {
     return this.player;
   }
 
