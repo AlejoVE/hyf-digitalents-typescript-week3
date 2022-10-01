@@ -1,9 +1,25 @@
-type Values = {
-  [key: string]: string
+type StateValue = {
+  [key: string]: string;
 }
-class Board {
 
-  public renderInitialBoard() {
+type ValidPlayer = "HUMAN" | "COMPUTER";
+
+class Player {
+  player: ValidPlayer = 'COMPUTER';
+
+  get currentPlayer() {
+    return this.player;
+  }
+
+  set currentPlayer(player: ValidPlayer) {
+    this.player = player;
+  }
+
+}
+class Board extends Player {
+  currentState: StateValue = {};
+
+  public renderInitialBoard(): void {
     console.log('         TIC - TAC - TOE')
     console.log("Choose a cell numbered from 1 to 9 as below and play")
     console.log(`
@@ -16,24 +32,23 @@ class Board {
 -------------- --------------  --------------  --------------
         `)
   }
-  public renderBoard(state: Values) {
+  public renderBoard(): void {
     console.log(`
-            ${state['1'] || ' '} | ${state['2'] || ' '} |  ${state['3'] || ' '}
+            ${this.currentState['1'] || ' '} | ${this.currentState['2'] || ' '} |  ${this.currentState['3'] || ' '}
             -----------
-            ${state['4'] || ' '} | ${state['5'] || ' '} |  ${state['6'] || ' '}
+            ${this.currentState['4'] || ' '} | ${this.currentState['5'] || ' '} |  ${this.currentState['6'] || ' '}
             -----------
-            ${state['7'] || ' '} | ${state['8'] || ' '} |  ${state['9'] || ' '}
+            ${this.currentState['7'] || ' '} | ${this.currentState['8'] || ' '} |  ${this.currentState['9'] || ' '}
 
     `)
 
   }
+
 }
 
 
 class Game extends Board {
   availableMoves: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  currentTurn: string = 'COMPUTER';
-  currentState: Values = {}
 
   public command(command: string): void {
 
@@ -61,10 +76,10 @@ class Game extends Board {
     this.executeMove(move, 'O', 'HUMAN');
   }
 
-  public executeMove(move: number, value: string, nextTurn: string) {
+  public executeMove(move: number, value: string, nextTurn: ValidPlayer) {
     // If there are no available moves, check if there is a winner or draw.
     if (this.availableMoves.length === 0) {
-      this.checkGame();
+      this.checkGame(this.currentState, this.currentPlayer);
     }
 
     // Take out current move from available moves
@@ -73,32 +88,32 @@ class Game extends Board {
     // Update state
     this.currentState[move] = value;
 
-    console.log(`${this.currentTurn} has put a ${value} in cell ${move}`);
+    console.log(`${this.currentPlayer} has put a ${value} in cell ${move}`);
 
-    this.renderBoard(this.currentState);
+    this.renderBoard();
 
     // Check if there is a winner or draw.
-    this.checkGame();
+    this.checkGame(this.currentState, this.currentPlayer);
 
     // Update turn
-    this.currentTurn = nextTurn;
+    this.currentPlayer = nextTurn;
 
   }
 
-  public checkGame(): void {
+  public checkGame(state: StateValue, player: ValidPlayer): void {
 
     // I was helped by this article https://antoniomignano.medium.com/node-js-socket-io-express-tic-tac-toe-10cff9108f7
 
     // Output example: ['OX, 'OOX', 'XXX', ...]
     const stateValues: string[] = [
-      this.currentState['1'] + this.currentState['2'] + this.currentState['3'], //First row
-      this.currentState['4'] + this.currentState['5'] + this.currentState['6'], //second row
-      this.currentState['7'] + this.currentState['8'] + this.currentState['9'], //Third row
-      this.currentState['1'] + this.currentState['4'] + this.currentState['7'], //First Colum
-      this.currentState['2'] + this.currentState['5'] + this.currentState['8'], //Second Colum
-      this.currentState['3'] + this.currentState['6'] + this.currentState['9'], //Third Colum
-      this.currentState['1'] + this.currentState['5'] + this.currentState['9'], //First Diagonal
-      this.currentState['7'] + this.currentState['5'] + this.currentState['3'], //Second Diagonal
+      state['1'] + state['2'] + state['3'], //First row
+      state['4'] + state['5'] + state['6'], //second row
+      state['7'] + state['8'] + state['9'], //Third row
+      state['1'] + state['4'] + state['7'], //First Colum
+      state['2'] + state['5'] + state['8'], //Second Colum
+      state['3'] + state['6'] + state['9'], //Third Colum
+      state['1'] + state['5'] + state['9'], //First Diagonal
+      state['7'] + state['5'] + state['3'], //Second Diagonal
     ];
 
     const winningCombinations: string[] = ['XXX', 'OOO'];
@@ -106,7 +121,7 @@ class Game extends Board {
     // Check if any of the values of the array match a winning combination
     for (let i = 0; i <= stateValues.length; i++) {
       if (stateValues[i] === winningCombinations[0] || stateValues[i] === winningCombinations[1]) {
-        console.log(`${this.currentTurn} has won!`);
+        console.log(`${player} has won!`);
         this.endGame();
       }
     }

@@ -23,8 +23,6 @@ rl.on('line', (line: string) => {
 
     game.command(line.trim());
 
-    // TODO: Find a better way to wait
-
     setTimeout(() => {
         rl.prompt();
     }, 2000)
